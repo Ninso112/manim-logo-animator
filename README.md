@@ -248,6 +248,7 @@ manim-logo-animator/
 │   │   └── renderer.py         # Manim renderer
 │   └── utils/                  # Utility modules
 ├── install.sh                  # Automated installation script (Linux)
+├── LICENSE                     # MIT License
 ├── requirements.txt
 └── README.md
 ```
@@ -338,7 +339,7 @@ To contribute or modify the application:
 
 ## License
 
-[Specify your license here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
