@@ -2,23 +2,21 @@
 
 import os
 from pathlib import Path
+from typing import Dict, Any
+from ..utils.constants import (
+    MANIM_ANIMATION_MAPPINGS, DEFAULT_FONT, DEFAULT_TEXT_COLOR
+)
 
 
 class SceneGenerator:
     """Generates Manim scene code dynamically."""
     
-    ANIMATION_MAPPINGS = {
-        "fade_in": "FadeIn",
-        "scale_up": "GrowFromCenter",
-        "rotate": "Rotate",
-        "draw": "DrawBorderThenFill"
-    }
-    
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the scene generator."""
         self.temp_scene_dir = Path(__file__).parent.parent.parent / "temp_scenes"
         self.temp_scene_dir.mkdir(exist_ok=True)
         
-    def generate_scene_code(self, config):
+    def generate_scene_code(self, config: Dict[str, Any]) -> str:
         """
         Generate Manim scene code based on configuration.
         
@@ -29,9 +27,16 @@ class SceneGenerator:
                 - upper_text: Text to display above animation
                 - lower_text: Text to display below animation
                 - render_settings: Dictionary with width, height, fps
+                - upper_font: Font name for upper text (optional)
+                - upper_color: Color for upper text (optional)
+                - lower_font: Font name for lower text (optional)
+                - lower_color: Color for lower text (optional)
                 
         Returns:
             str: Python code for the Manim scene
+            
+        Raises:
+            KeyError: If required config keys are missing.
         """
         svg_path = config["svg_path"]
         animation_type = config["animation_type"]
@@ -44,7 +49,7 @@ class SceneGenerator:
         fps = render_settings.get("fps", 60)
         
         # Get animation class name
-        anim_class = self.ANIMATION_MAPPINGS.get(animation_type, "FadeIn")
+        anim_class = MANIM_ANIMATION_MAPPINGS.get(animation_type, "FadeIn")
         
         # Use repr() to properly escape the SVG path for Python string literal
         # repr() handles all special characters correctly, including backslashes
@@ -83,8 +88,8 @@ class LogoScreen(Scene):
 '''
         
         if upper_text:
-            upper_font = config.get("upper_font", "Arial")
-            upper_color = config.get("upper_color", "#FFFFFF")
+            upper_font = config.get("upper_font", DEFAULT_FONT)
+            upper_color = config.get("upper_color", DEFAULT_TEXT_COLOR)
             upper_text_escaped = escape_text(upper_text)
             scene_code += f'''        upper_text_obj = Text(
             "{upper_text_escaped}",
@@ -101,8 +106,8 @@ class LogoScreen(Scene):
 '''
         
         if lower_text:
-            lower_font = config.get("lower_font", "Arial")
-            lower_color = config.get("lower_color", "#FFFFFF")
+            lower_font = config.get("lower_font", DEFAULT_FONT)
+            lower_color = config.get("lower_color", DEFAULT_TEXT_COLOR)
             lower_text_escaped = escape_text(lower_text)
             scene_code += f'''        lower_text_obj = Text(
             "{lower_text_escaped}",
@@ -122,7 +127,9 @@ class LogoScreen(Scene):
         
         return scene_code
         
-    def save_scene_file(self, config, scene_name="logo_scene"):
+    def save_scene_file(
+        self, config: Dict[str, Any], scene_name: str = "logo_scene"
+    ) -> Path:
         """
         Save generated scene code to a file.
         
@@ -132,16 +139,28 @@ class LogoScreen(Scene):
             
         Returns:
             Path: Path to the saved scene file
+            
+        Raises:
+            IOError: If file cannot be written.
         """
         scene_code = self.generate_scene_code(config)
         scene_file = self.temp_scene_dir / f"{scene_name}.py"
         
-        with open(scene_file, 'w', encoding='utf-8') as f:
-            f.write(scene_code)
+        try:
+            with open(scene_file, 'w', encoding='utf-8') as f:
+                f.write(scene_code)
+        except IOError as e:
+            raise IOError(f"Failed to save scene file: {e}") from e
             
         return scene_file
         
-    def get_scene_class_name(self):
-        """Get the scene class name used in generated code."""
+    @staticmethod
+    def get_scene_class_name() -> str:
+        """
+        Get the scene class name used in generated code.
+        
+        Returns:
+            str: The scene class name "LogoScreen".
+        """
         return "LogoScreen"
 

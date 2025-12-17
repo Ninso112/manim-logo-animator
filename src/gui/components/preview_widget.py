@@ -1,5 +1,6 @@
 """Preview widget for animation preview."""
 
+from typing import Optional
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 )
@@ -8,18 +9,23 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from pathlib import Path
+from ...utils.constants import PREVIEW_MIN_WIDTH, PREVIEW_MIN_HEIGHT
 
 
 class PreviewWidget(QWidget):
     """Widget for displaying animation preview."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the preview widget."""
         super().__init__()
-        self.video_path = None
-        self.media_player = None
+        self.video_path: Optional[str] = None
+        self.media_player: Optional[QMediaPlayer] = None
+        self.video_widget: Optional[QVideoWidget] = None
+        self.preview_label: Optional[QLabel] = None
+        self.use_video_widget = False
         self._setup_ui()
         
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI."""
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
@@ -31,7 +37,7 @@ class PreviewWidget(QWidget):
         # Preview area - try to use QVideoWidget, fallback to QLabel
         try:
             self.video_widget = QVideoWidget()
-            self.video_widget.setMinimumSize(640, 360)
+            self.video_widget.setMinimumSize(PREVIEW_MIN_WIDTH, PREVIEW_MIN_HEIGHT)
             layout.addWidget(self.video_widget)
             
             # Setup media player
@@ -44,7 +50,7 @@ class PreviewWidget(QWidget):
         except Exception:
             # Fallback to label if video widget not available
             self.preview_label = QLabel()
-            self.preview_label.setMinimumSize(640, 360)
+            self.preview_label.setMinimumSize(PREVIEW_MIN_WIDTH, PREVIEW_MIN_HEIGHT)
             self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.preview_label.setStyleSheet(
                 "background-color: #1e1e1e; border: 1px solid #555;"
@@ -75,12 +81,17 @@ class PreviewWidget(QWidget):
         controls_layout.addStretch()
         layout.addLayout(controls_layout)
         
-    def set_preview(self, video_path):
-        """Set the preview video."""
+    def set_preview(self, video_path: str) -> None:
+        """
+        Set the preview video.
+        
+        Args:
+            video_path: Path to the video file to preview.
+        """
         self.video_path = video_path
         
         if not Path(video_path).exists():
-            if not self.use_video_widget:
+            if not self.use_video_widget and self.preview_label:
                 self.preview_label.setText(f"Video file not found: {video_path}")
             return
             
@@ -96,14 +107,14 @@ class PreviewWidget(QWidget):
             self.pause_btn.setEnabled(True)
             self.stop_btn.setEnabled(True)
         
-    def clear_preview(self):
+    def clear_preview(self) -> None:
         """Clear the preview."""
         if self.media_player:
             self.media_player.stop()
             
-        if self.use_video_widget:
+        if self.use_video_widget and self.video_widget:
             self.video_widget.clear()
-        else:
+        elif self.preview_label:
             self.preview_label.setText("Preview will appear here")
             
         self.play_btn.setEnabled(False)
@@ -111,17 +122,17 @@ class PreviewWidget(QWidget):
         self.stop_btn.setEnabled(False)
         self.video_path = None
         
-    def _play(self):
+    def _play(self) -> None:
         """Play the video."""
         if self.media_player:
             self.media_player.play()
             
-    def _pause(self):
+    def _pause(self) -> None:
         """Pause the video."""
         if self.media_player:
             self.media_player.pause()
             
-    def _stop(self):
+    def _stop(self) -> None:
         """Stop the video."""
         if self.media_player:
             self.media_player.stop()

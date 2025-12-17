@@ -6,19 +6,27 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QColor, QFont
 from PyQt6.QtCore import Qt
+from ...utils.constants import DEFAULT_FONT, DEFAULT_FONT_SIZE, DEFAULT_TEXT_COLOR
 
 
 class TextEditor(QWidget):
     """Widget for editing text with font and color options."""
     
-    def __init__(self, label_text="Text"):
+    def __init__(self, label_text: str = "Text") -> None:
+        """
+        Initialize the text editor widget.
+        
+        Args:
+            label_text: Label text to display above the editor.
+        """
         super().__init__()
         self.label_text = label_text
-        self.font = QFont("Arial", 24)
-        self.color = QColor(255, 255, 255)  # White
+        self.font = QFont(DEFAULT_FONT, DEFAULT_FONT_SIZE)
+        self.color = QColor(DEFAULT_TEXT_COLOR)
+        self.text_edit: QTextEdit
         self._setup_ui()
         
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI."""
         layout = QVBoxLayout(self)
         layout.setSpacing(5)
@@ -47,35 +55,55 @@ class TextEditor(QWidget):
         controls_layout.addStretch()
         layout.addLayout(controls_layout)
         
-    def _select_font(self):
-        """Open font dialog."""
+    def _select_font(self) -> None:
+        """Open font dialog and update font if selected."""
         font, ok = QFontDialog.getFont(self.font, self)
         if ok:
             self.font = font
             self._update_text_formatting()
             
-    def _select_color(self):
-        """Open color dialog."""
+    def _select_color(self) -> None:
+        """Open color dialog and update color if valid."""
         color = QColorDialog.getColor(self.color, self, "Select Text Color")
         if color.isValid():
             self.color = color
             self._update_text_formatting()
             
-    def _update_text_formatting(self):
-        """Update text formatting in the editor."""
-        # Note: QTextEdit formatting is complex, this is a simplified approach
-        # For full formatting, we'd need to use QTextCharFormat
+    def _update_text_formatting(self) -> None:
+        """
+        Update text formatting in the editor.
+        
+        Note: QTextEdit formatting is complex. For full formatting,
+        we'd need to use QTextCharFormat. This is a placeholder
+        for future enhancement.
+        """
+        # Placeholder for future formatting implementation
         pass
         
-    def get_text(self):
-        """Get the text content."""
+    def get_text(self) -> str:
+        """
+        Get the text content.
+        
+        Returns:
+            str: The plain text content of the editor.
+        """
         return self.text_edit.toPlainText()
         
-    def get_font(self):
-        """Get the selected font."""
+    def get_font(self) -> QFont:
+        """
+        Get the selected font.
+        
+        Returns:
+            QFont: The currently selected font.
+        """
         return self.font
         
-    def get_color(self):
-        """Get the selected color."""
+    def get_color(self) -> QColor:
+        """
+        Get the selected color.
+        
+        Returns:
+            QColor: The currently selected color.
+        """
         return self.color
 

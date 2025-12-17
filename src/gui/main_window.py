@@ -1,5 +1,6 @@
 """Main window for Manim Logo Animator."""
 
+from typing import Dict, Any
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QMenuBar, QStatusBar, QMenu, QAction, QMessageBox, QFileDialog
@@ -15,15 +16,20 @@ from .components.render_settings import RenderSettings
 from .components.preview_widget import PreviewWidget
 from .dialogs.render_dialog import RenderDialog
 from ..manim.renderer import ManimRenderer
+from ..utils.constants import (
+    APP_NAME, APP_VERSION, MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT,
+    SPLITTER_LEFT_SIZE, SPLITTER_RIGHT_SIZE, PREVIEW_QUALITY
+)
 
 
 class MainWindow(QMainWindow):
     """Main application window."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the main window."""
         super().__init__()
-        self.setWindowTitle("Manim Logo Animator")
-        self.setMinimumSize(1200, 800)
+        self.setWindowTitle(APP_NAME)
+        self.setMinimumSize(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT)
         
         # Initialize renderer
         self.renderer = ManimRenderer()
@@ -73,7 +79,7 @@ class MainWindow(QMainWindow):
         splitter.addWidget(right_panel)
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 2)
-        splitter.setSizes([400, 800])
+        splitter.setSizes([SPLITTER_LEFT_SIZE, SPLITTER_RIGHT_SIZE])
         
     def _setup_menu_bar(self):
         """Setup the menu bar."""
@@ -132,7 +138,7 @@ class MainWindow(QMainWindow):
             config = self.get_animation_config()
             preview_config = config.copy()
             preview_config["render_settings"] = config["render_settings"].copy()
-            preview_config["render_settings"]["quality"] = "Low (480p)"
+            preview_config["render_settings"]["quality"] = PREVIEW_QUALITY
             
             # Render preview
             preview_path = self.renderer.render(
@@ -195,18 +201,23 @@ class MainWindow(QMainWindow):
                                f"An error occurred while rendering:\n{str(e)}")
             self.statusBar().showMessage("Render error")
         
-    def _show_about(self):
+    def _show_about(self) -> None:
         """Show about dialog."""
         QMessageBox.about(
             self,
-            "About Manim Logo Animator",
-            "Manim Logo Animator\n\n"
+            f"About {APP_NAME}",
+            f"{APP_NAME}\n\n"
             "A GUI application for animating SVG logos using Manim.\n\n"
-            "Version 1.0.0"
+            f"Version {APP_VERSION}"
         )
         
-    def get_animation_config(self):
-        """Get current animation configuration."""
+    def get_animation_config(self) -> Dict[str, Any]:
+        """
+        Get current animation configuration.
+        
+        Returns:
+            Dict containing all animation configuration settings.
+        """
         config = {
             "svg_path": self.file_selector.get_file_path(),
             "animation_type": self.animation_selector.get_animation_type(),

@@ -1,5 +1,6 @@
 """SVG file selector component."""
 
+from typing import Optional
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
     QLineEdit, QFileDialog, QMessageBox
@@ -11,9 +12,11 @@ import os
 class FileSelector(QWidget):
     """Widget for selecting SVG files."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the file selector widget."""
         super().__init__()
-        self.file_path = ""
+        self.file_path: str = ""
+        self.path_edit: QLineEdit
         self._setup_ui()
         
     def _setup_ui(self):
@@ -39,7 +42,7 @@ class FileSelector(QWidget):
         
         layout.addLayout(file_layout)
         
-    def browse_file(self):
+    def browse_file(self) -> None:
         """Open file dialog to select SVG file."""
         file_path, _ = QFileDialog.getOpenFileName(
             self,
@@ -59,12 +62,17 @@ class FileSelector(QWidget):
                     "The selected file does not appear to be a valid SVG file."
                 )
                 
-    def _validate_svg(self, file_path):
-        """Validate that the file is an SVG file."""
-        if not file_path:
-            return False
+    def _validate_svg(self, file_path: str) -> bool:
+        """
+        Validate that the file is an SVG file.
+        
+        Args:
+            file_path: Path to the file to validate.
             
-        if not os.path.exists(file_path):
+        Returns:
+            bool: True if file is a valid SVG, False otherwise.
+        """
+        if not file_path or not os.path.exists(file_path):
             return False
             
         # Check file extension
@@ -75,16 +83,18 @@ class FileSelector(QWidget):
         try:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read(1000)  # Read first 1000 chars
-                if 'svg' in content.lower() or '<svg' in content:
-                    return True
-        except (IOError, OSError, UnicodeDecodeError) as e:
+                return 'svg' in content.lower() or '<svg' in content
+        except (IOError, OSError, UnicodeDecodeError):
             return False
         except Exception:
             return False
-            
-        return False
         
-    def get_file_path(self):
-        """Get the selected file path."""
+    def get_file_path(self) -> str:
+        """
+        Get the selected file path.
+        
+        Returns:
+            str: The selected file path, or empty string if none selected.
+        """
         return self.file_path
 
