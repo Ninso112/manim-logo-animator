@@ -1,0 +1,6 @@
+PyQt6>=6.6.0
+manim>=0.18.0
+numpy>=1.24.0
+svglib>=1.5.0
+reportlab>=4.0.0
+
