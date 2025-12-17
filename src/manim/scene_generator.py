@@ -46,11 +46,13 @@ class SceneGenerator:
         # Get animation class name
         anim_class = self.ANIMATION_MAPPINGS.get(animation_type, "FadeIn")
         
-        # Escape the SVG path for Python string
-        svg_path_escaped = svg_path.replace("\\", "\\\\").replace('"', '\\"')
+        # Use repr() to properly escape the SVG path for Python string literal
+        # repr() handles all special characters correctly, including backslashes
+        svg_path_repr = repr(svg_path)
         
-        # Escape text for Python strings
+        # Escape text for Python strings (for use in double-quoted strings)
         def escape_text(text):
+            # Escape backslashes, quotes, and newlines for double-quoted strings
             return text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
         
         # Generate scene code
@@ -66,7 +68,7 @@ class LogoScreen(Scene):
         self.camera.frame_height = {height}
         
         # Load SVG
-        svg_path = r"{svg_path_escaped}"
+        svg_path = {svg_path_repr}
         if not os.path.exists(svg_path):
             raise FileNotFoundError(f"SVG file not found: {{svg_path}}")
         

@@ -29,7 +29,7 @@ The easiest way to install on Linux is using the provided installation script:
 
 ```bash
 # Clone or download this repository
-git clone <repository-url>
+git clone https://github.com/Ninso112/manim-logo-animator.git
 cd manim-logo-animator
 
 # Run the installation script (will prompt for sudo when needed)
@@ -49,7 +49,7 @@ The script will:
 #### 1. Clone or download this repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Ninso112/manim-logo-animator.git
 cd manim-logo-animator
 ```
 
