@@ -1,23 +1,20 @@
 """Animation type selector component."""
 
+from typing import Dict
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QComboBox
+from ...utils.constants import ANIMATION_TYPES
 
 
 class AnimationSelector(QWidget):
     """Widget for selecting animation type."""
     
-    ANIMATION_TYPES = {
-        "Fade In": "fade_in",
-        "Scale Up": "scale_up",
-        "Rotate": "rotate",
-        "Draw": "draw"
-    }
-    
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the animation selector widget."""
         super().__init__()
+        self.combo_box: QComboBox
         self._setup_ui()
         
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI."""
         layout = QVBoxLayout(self)
         layout.setSpacing(5)
@@ -27,11 +24,16 @@ class AnimationSelector(QWidget):
         layout.addWidget(title)
         
         self.combo_box = QComboBox()
-        self.combo_box.addItems(list(self.ANIMATION_TYPES.keys()))
+        self.combo_box.addItems(list(ANIMATION_TYPES.keys()))
         layout.addWidget(self.combo_box)
         
-    def get_animation_type(self):
-        """Get the selected animation type."""
+    def get_animation_type(self) -> str:
+        """
+        Get the selected animation type.
+        
+        Returns:
+            str: The animation type identifier (e.g., "fade_in").
+        """
         current_text = self.combo_box.currentText()
-        return self.ANIMATION_TYPES.get(current_text, "fade_in")
+        return ANIMATION_TYPES.get(current_text, "fade_in")
 

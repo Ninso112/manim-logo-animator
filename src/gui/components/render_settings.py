@@ -1,34 +1,27 @@
 """Render settings component."""
 
+from typing import Dict, Any, Tuple
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QGroupBox
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox
+)
+from ...utils.constants import (
+    ASPECT_RATIOS, FPS_OPTIONS, QUALITY_PRESETS,
+    DEFAULT_FPS, DEFAULT_QUALITY
 )
 
 
 class RenderSettings(QWidget):
     """Widget for render settings (aspect ratio, FPS, quality)."""
     
-    ASPECT_RATIOS = {
-        "1:1": (1, 1),
-        "16:9": (16, 9),
-        "500x500": (500, 500),
-        "1920x1080": (1920, 1080)
-    }
-    
-    FPS_OPTIONS = [30, 60, 90, 144]
-    
-    QUALITY_PRESETS = {
-        "Low (480p)": {"width": 854, "height": 480},
-        "Medium (720p)": {"width": 1280, "height": 720},
-        "High (1080p)": {"width": 1920, "height": 1080},
-        "Ultra (4K)": {"width": 3840, "height": 2160}
-    }
-    
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the render settings widget."""
         super().__init__()
+        self.aspect_combo: QComboBox
+        self.fps_combo: QComboBox
+        self.quality_combo: QComboBox
         self._setup_ui()
         
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI."""
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
@@ -43,7 +36,7 @@ class RenderSettings(QWidget):
         aspect_layout.addWidget(aspect_label)
         
         self.aspect_combo = QComboBox()
-        self.aspect_combo.addItems(list(self.ASPECT_RATIOS.keys()))
+        self.aspect_combo.addItems(list(ASPECT_RATIOS.keys()))
         aspect_layout.addWidget(self.aspect_combo)
         aspect_layout.addStretch()
         layout.addLayout(aspect_layout)
@@ -54,8 +47,8 @@ class RenderSettings(QWidget):
         fps_layout.addWidget(fps_label)
         
         self.fps_combo = QComboBox()
-        self.fps_combo.addItems([str(fps) for fps in self.FPS_OPTIONS])
-        self.fps_combo.setCurrentText("60")
+        self.fps_combo.addItems([str(fps) for fps in FPS_OPTIONS])
+        self.fps_combo.setCurrentText(str(DEFAULT_FPS))
         fps_layout.addWidget(self.fps_combo)
         fps_layout.addStretch()
         layout.addLayout(fps_layout)
@@ -66,21 +59,32 @@ class RenderSettings(QWidget):
         quality_layout.addWidget(quality_label)
         
         self.quality_combo = QComboBox()
-        self.quality_combo.addItems(list(self.QUALITY_PRESETS.keys()))
-        self.quality_combo.setCurrentText("High (1080p)")
+        self.quality_combo.addItems(list(QUALITY_PRESETS.keys()))
+        self.quality_combo.setCurrentText(DEFAULT_QUALITY)
         quality_layout.addWidget(self.quality_combo)
         quality_layout.addStretch()
         layout.addLayout(quality_layout)
         
-    def get_settings(self):
-        """Get current render settings."""
-        aspect_key = self.aspect_combo.currentText()
-        aspect_ratio = self.ASPECT_RATIOS.get(aspect_key, (16, 9))
+    def get_settings(self) -> Dict[str, Any]:
+        """
+        Get current render settings.
         
-        fps = int(self.fps_combo.currentText())
+        Returns:
+            Dict containing aspect_ratio, width, height, fps, and quality.
+        """
+        aspect_key = self.aspect_combo.currentText()
+        aspect_ratio = ASPECT_RATIOS.get(aspect_key, (16, 9))
+        
+        try:
+            fps = int(self.fps_combo.currentText())
+        except ValueError:
+            fps = DEFAULT_FPS
         
         quality_key = self.quality_combo.currentText()
-        quality = self.QUALITY_PRESETS.get(quality_key, {"width": 1920, "height": 1080})
+        quality = QUALITY_PRESETS.get(
+            quality_key,
+            QUALITY_PRESETS[DEFAULT_QUALITY]
+        )
         
         # Determine final resolution
         if aspect_key in ["500x500", "1920x1080"]:

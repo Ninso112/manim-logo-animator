@@ -1,39 +1,48 @@
 """Manim renderer for executing Manim rendering commands."""
 
 import subprocess
-import os
 from pathlib import Path
-from typing import Optional, Callable
+from typing import Optional, Callable, Dict, Any
 from .scene_generator import SceneGenerator
+from ..utils.constants import QUALITY_FLAGS, QUALITY_NAMES, DEFAULT_QUALITY
 
 
 class ManimRenderer:
     """Handles Manim rendering execution."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the Manim renderer."""
         self.scene_generator = SceneGenerator()
         self.output_dir = Path.home() / "manim_output"
         self.output_dir.mkdir(exist_ok=True)
         
-    def render(self, config, output_path: Optional[Path] = None, 
-               progress_callback: Optional[Callable] = None) -> Path:
+    def render(
+        self,
+        config: Dict[str, Any],
+        output_path: Optional[Path] = None,
+        progress_callback: Optional[Callable[[str], None]] = None
+    ) -> Path:
         """
         Render the animation.
         
         Args:
-            config: Configuration dictionary
+            config: Configuration dictionary with render_settings
             output_path: Optional custom output path
             progress_callback: Optional callback function for progress updates
             
         Returns:
             Path: Path to the rendered video file
+            
+        Raises:
+            RuntimeError: If rendering fails or video file is not found.
+            FileNotFoundError: If Manim is not installed.
         """
         if progress_callback:
             progress_callback("Generating scene code...")
             
         # Generate and save scene file
         scene_file = self.scene_generator.save_scene_file(config)
-        scene_class = self.scene_generator.get_scene_class_name()
+        scene_class = SceneGenerator.get_scene_class_name()
         
         if progress_callback:
             progress_callback("Starting Manim render...")
@@ -134,29 +143,31 @@ class ManimRenderer:
                 progress_callback(f"Error: {error_msg}")
             raise RuntimeError(error_msg)
             
-    def _get_quality_flag(self, render_settings):
-        """Get Manim quality flag based on render settings."""
-        quality = render_settings.get("quality", "High (1080p)")
+    @staticmethod
+    def _get_quality_flag(render_settings: Dict[str, Any]) -> str:
+        """
+        Get Manim quality flag based on render settings.
         
-        if "Low" in quality:
-            return "-ql"  # low quality
-        elif "Medium" in quality:
-            return "-qm"  # medium quality
-        elif "Ultra" in quality:
-            return "-qh"  # high quality (4K)
-        else:
-            return "-qh"  # default to high
+        Args:
+            render_settings: Dictionary containing quality setting.
             
-    def _get_quality_name(self, render_settings):
-        """Get Manim quality name for output directory."""
-        quality = render_settings.get("quality", "High (1080p)")
+        Returns:
+            str: Quality flag for Manim command.
+        """
+        quality = render_settings.get("quality", DEFAULT_QUALITY)
+        return QUALITY_FLAGS.get(quality, QUALITY_FLAGS[DEFAULT_QUALITY])
+            
+    @staticmethod
+    def _get_quality_name(render_settings: Dict[str, Any]) -> str:
+        """
+        Get Manim quality name for output directory.
         
-        if "Low" in quality:
-            return "480p15"
-        elif "Medium" in quality:
-            return "720p30"
-        elif "Ultra" in quality:
-            return "2160p60"
-        else:
-            return "1080p60"
+        Args:
+            render_settings: Dictionary containing quality setting.
+            
+        Returns:
+            str: Quality name for output directory.
+        """
+        quality = render_settings.get("quality", DEFAULT_QUALITY)
+        return QUALITY_NAMES.get(quality, QUALITY_NAMES[DEFAULT_QUALITY])
 
