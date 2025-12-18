@@ -2,6 +2,7 @@ from manim import *
 import os
 
 config.frame_rate = 60
+# Set background color (Manim accepts hex strings directly)
 config.background_color = "#00ff00"
 
 class LogoScreen(Scene):
@@ -10,7 +11,7 @@ class LogoScreen(Scene):
         self.camera.background_color = "#00ff00"
         
         # Load SVG
-        svg_path = '/home/ninso/Downloads/Hammer_and_sickle.svg'
+        svg_path = '/home/ninso/Downloads/Antifasistische_Aktion_logo.svg'
         if not os.path.exists(svg_path):
             raise FileNotFoundError(f"SVG file not found: {svg_path}")
         
@@ -32,7 +33,7 @@ class LogoScreen(Scene):
         upper_text_obj.move_to(UP * 2.5)
         # Lower text
         lower_text_obj = Text(
-            "test",
+            "test3",
             font="Arial",
             font_size=48,
             color="#ffffff"
@@ -40,7 +41,7 @@ class LogoScreen(Scene):
         lower_text_obj.move_to(DOWN * 2.5)
 
         # Animate in sequence
-        self.play(FadeIn(upper_text_obj), run_time=1.5)
+        self.play(Write(upper_text_obj), run_time=1.5)
         self.wait(0.5)
         
         # Animate logo
