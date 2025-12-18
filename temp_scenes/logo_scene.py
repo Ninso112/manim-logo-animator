@@ -2,11 +2,15 @@ from manim import *
 import os
 
 config.frame_rate = 60
+config.background_color = "#00ff00"
 
 class LogoScreen(Scene):
     def construct(self):
+        # Set background color
+        self.camera.background_color = "#00ff00"
+        
         # Load SVG
-        svg_path = '/home/ninso/Downloads/antifa (1).svg'
+        svg_path = '/home/ninso/Downloads/Solid_Logo.svg'
         if not os.path.exists(svg_path):
             raise FileNotFoundError(f"SVG file not found: {svg_path}")
         
@@ -36,14 +40,14 @@ class LogoScreen(Scene):
         lower_text_obj.move_to(DOWN * 2.5)
 
         # Animate in sequence
-        self.add(upper_text_obj)
+        self.play(FadeIn(upper_text_obj), run_time=1.5)
         self.wait(0.5)
         
         # Animate logo
-        self.play(FadeIn(logo), run_time=1.5)
+        self.play(DrawBorderThenFill(logo), run_time=1.5)
         self.wait(0.5)
         
         # Animate lower text
-        self.add(lower_text_obj)
+        self.play(FadeOut(lower_text_obj), run_time=1.5)
         
         self.wait(1)
