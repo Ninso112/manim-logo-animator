@@ -29,6 +29,37 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Check Python version
+check_python_version() {
+    if ! command -v python3 &> /dev/null; then
+        print_error "Python 3 is not installed."
+        exit 1
+    fi
+    
+    PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+    PYTHON_MAJOR=$(echo $PYTHON_VERSION | cut -d. -f1)
+    PYTHON_MINOR=$(echo $PYTHON_VERSION | cut -d. -f2)
+    
+    print_info "Detected Python version: $PYTHON_VERSION"
+    
+    # Manim supports Python 3.8-3.12
+    if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 8 ]); then
+        print_error "Python 3.8 or higher is required. Found: $PYTHON_VERSION"
+        exit 1
+    fi
+    
+    if [ "$PYTHON_MAJOR" -gt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -gt 12 ]); then
+        print_warning "Python $PYTHON_VERSION detected. Manim officially supports Python 3.8-3.12."
+        print_warning "You may encounter compatibility issues. Consider using Python 3.11 or 3.12."
+        read -p "Continue anyway? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            print_info "Installation cancelled. Please install Python 3.11 or 3.12."
+            exit 1
+        fi
+    fi
+}
+
 # Check if running as root (for package installation)
 check_root() {
     if [ "$EUID" -ne 0 ]; then 
@@ -184,7 +215,22 @@ install_python_deps() {
         exit 1
     fi
     
-    $PIP_CMD install --user -r requirements.txt
+    # Try to install dependencies, with fallback for av/skia issues
+    if ! $PIP_CMD install --user -r requirements.txt 2>&1 | tee /tmp/manim_install.log; then
+        if grep -q "Failed building wheel for av\|skia-python" /tmp/manim_install.log; then
+            print_warning "Installation failed due to Python version compatibility."
+            print_error "Python 3.13+ is not yet supported by Manim dependencies."
+            print_info "Please use Python 3.11 or 3.12 instead."
+            print_info "You can install Python 3.12 and create a virtual environment:"
+            print_info "  python3.12 -m venv venv"
+            print_info "  source venv/bin/activate"
+            print_info "  pip install -r requirements.txt"
+            exit 1
+        else
+            print_error "Failed to install dependencies. Check the error above."
+            exit 1
+        fi
+    fi
     
     print_success "Python dependencies installed"
 }
@@ -244,6 +290,9 @@ main() {
     print_info "Manim Logo Animator Installation Script"
     print_info "========================================"
     echo
+    
+    # Check Python version first
+    check_python_version
     
     # Detect distribution
     detect_distro

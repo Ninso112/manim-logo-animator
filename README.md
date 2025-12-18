@@ -16,10 +16,12 @@ A cross-platform GUI application for animating SVG logos using Manim. Create pro
 
 ## Requirements
 
-- Python 3.8 or higher
+- **Python 3.8 - 3.12** (Python 3.13+ may have compatibility issues with Manim dependencies)
 - Manim (Community Edition)
 - PyQt6
 - System dependencies for Manim (varies by platform)
+
+**Important**: Python 3.13 and 3.14 are not yet fully supported by Manim and its dependencies (especially `av` and `skia-python`). Please use Python 3.11 or 3.12 for best compatibility.
 
 ## Installation
 
@@ -287,6 +289,37 @@ If the automated installation script (`install.sh`) fails:
 3. **Manual installation**: If the script doesn't work, follow the [manual installation instructions](#manual-installation) for your specific distribution
 
 4. **Unsupported distribution**: If your distribution is not detected, you can manually install dependencies following the patterns in the script
+
+### Python Version Compatibility Issues
+
+If you encounter errors like:
+- `Failed building wheel for av`
+- `No matching distribution found for skia-python`
+- `struct AVStream has no member named 'nb_side_data'`
+
+This usually means you're using Python 3.13 or 3.14, which are not yet fully supported by Manim dependencies.
+
+**Solution**: Use Python 3.11 or 3.12 instead:
+
+```bash
+# Check your Python version
+python3 --version
+
+# If you have Python 3.13+, install Python 3.12:
+# Ubuntu/Debian:
+sudo apt install python3.12 python3.12-venv python3.12-pip
+
+# Arch Linux:
+sudo pacman -S python312
+
+# Fedora:
+sudo dnf install python3.12 python3.12-pip
+
+# Then create a virtual environment with Python 3.12:
+python3.12 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
 ### Manim Not Found
 
