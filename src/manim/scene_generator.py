@@ -121,6 +121,7 @@ class SceneGenerator:
 import os
 
 config.frame_rate = {fps}
+# Set background color (Manim accepts hex strings directly)
 config.background_color = "{background_color}"
 
 class LogoScreen(Scene):
