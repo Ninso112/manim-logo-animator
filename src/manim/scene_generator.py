@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from utils.constants import (
     MANIM_ANIMATION_MAPPINGS, DEFAULT_FONT, DEFAULT_TEXT_COLOR, DEFAULT_BACKGROUND_COLOR
 )
@@ -65,10 +65,11 @@ class SceneGenerator:
         lower_animation = config.get("lower_animation")
         
         # Helper function to get animation code
-        def get_animation_code(obj_name: str, anim_type: str, is_text: bool = False) -> str:
+        def get_animation_code(obj_name: str, anim_type: Optional[str], is_text: bool = False) -> str:
             """Generate animation code for an object."""
+            # If no animation type specified, use FadeIn as default
             if not anim_type:
-                return f"self.add({obj_name})"
+                return f"self.play(FadeIn({obj_name}), run_time=1)"
             
             anim_class = MANIM_ANIMATION_MAPPINGS.get(anim_type, "FadeIn")
             
@@ -124,7 +125,7 @@ config.background_color = "{background_color}"
 
 class LogoScreen(Scene):
     def construct(self):
-        # Set background color
+        # Set background color (both config and camera for compatibility)
         self.camera.background_color = "{background_color}"
         
         # Load SVG

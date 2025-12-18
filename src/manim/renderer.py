@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional, Callable, Dict, Any
 from manim.scene_generator import SceneGenerator
 from utils.constants import QUALITY_FLAGS, QUALITY_NAMES, DEFAULT_QUALITY
+import shutil
 
 
 class ManimRenderer:
