@@ -3,7 +3,10 @@
 # Manim Logo Animator Installation Script
 # This script detects the Linux distribution and installs all required dependencies
 
-set -e  # Exit on error
+# Ensure we're using bash
+if [ -z "$BASH_VERSION" ]; then
+    exec bash "$0" "$@"
+fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -28,6 +31,9 @@ print_warning() {
 print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
+
+# Set error handling after function definitions
+set -e  # Exit on error
 
 # Check Python version
 check_python_version() {
@@ -305,33 +311,37 @@ main() {
     fi
     
     # Install system dependencies based on distribution
+    # Export all needed functions and variables for sudo execution
+    EXPORT_FUNCS="$(declare -f print_info print_success print_warning print_error)"
+    EXPORT_VARS="RED='${RED}' GREEN='${GREEN}' YELLOW='${YELLOW}' BLUE='${BLUE}' NC='${NC}'"
+    
     case $DISTRO in
         ubuntu|debian)
             if [ "$EUID" -eq 0 ]; then
                 install_debian
             else
-                sudo bash -c "$(declare -f install_debian); install_debian"
+                sudo bash -c "${EXPORT_VARS}; ${EXPORT_FUNCS}; $(declare -f install_debian); install_debian"
             fi
             ;;
         fedora|rhel|centos)
             if [ "$EUID" -eq 0 ]; then
                 install_fedora
             else
-                sudo bash -c "$(declare -f install_fedora); install_fedora"
+                sudo bash -c "${EXPORT_VARS}; ${EXPORT_FUNCS}; $(declare -f install_fedora); install_fedora"
             fi
             ;;
         arch|manjaro)
             if [ "$EUID" -eq 0 ]; then
                 install_arch
             else
-                sudo bash -c "$(declare -f install_arch); install_arch"
+                sudo bash -c "${EXPORT_VARS}; ${EXPORT_FUNCS}; $(declare -f install_arch); install_arch"
             fi
             ;;
         opensuse*)
             if [ "$EUID" -eq 0 ]; then
                 install_opensuse
             else
-                sudo bash -c "$(declare -f install_opensuse); install_opensuse"
+                sudo bash -c "${EXPORT_VARS}; ${EXPORT_FUNCS}; $(declare -f install_opensuse); install_opensuse"
             fi
             ;;
         *)

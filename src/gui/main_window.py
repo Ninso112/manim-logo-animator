@@ -3,20 +3,20 @@
 from typing import Dict, Any
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
-    QMenuBar, QStatusBar, QMenu, QAction, QMessageBox, QFileDialog
+    QMenuBar, QStatusBar, QMenu, QMessageBox, QFileDialog
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QKeySequence
+from PyQt6.QtGui import QKeySequence, QAction
 from pathlib import Path
 
-from .components.file_selector import FileSelector
-from .components.animation_selector import AnimationSelector
-from .components.text_editor import TextEditor
-from .components.render_settings import RenderSettings
-from .components.preview_widget import PreviewWidget
-from .dialogs.render_dialog import RenderDialog
-from ..manim.renderer import ManimRenderer
-from ..utils.constants import (
+from gui.components.file_selector import FileSelector
+from gui.components.animation_selector import AnimationSelector
+from gui.components.text_editor import TextEditor
+from gui.components.render_settings import RenderSettings
+from gui.components.preview_widget import PreviewWidget
+from gui.dialogs.render_dialog import RenderDialog
+from manim.renderer import ManimRenderer
+from utils.constants import (
     APP_NAME, APP_VERSION, MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT,
     SPLITTER_LEFT_SIZE, SPLITTER_RIGHT_SIZE, PREVIEW_QUALITY
 )

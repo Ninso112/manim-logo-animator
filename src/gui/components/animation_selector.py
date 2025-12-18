@@ -2,7 +2,7 @@
 
 from typing import Dict
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QComboBox
-from ...utils.constants import ANIMATION_TYPES
+from utils.constants import ANIMATION_TYPES
 
 
 class AnimationSelector(QWidget):

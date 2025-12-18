@@ -9,7 +9,7 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from pathlib import Path
-from ...utils.constants import PREVIEW_MIN_WIDTH, PREVIEW_MIN_HEIGHT
+from utils.constants import PREVIEW_MIN_WIDTH, PREVIEW_MIN_HEIGHT
 
 
 class PreviewWidget(QWidget):

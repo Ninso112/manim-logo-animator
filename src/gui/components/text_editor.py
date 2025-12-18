@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QColor, QFont
 from PyQt6.QtCore import Qt
-from ...utils.constants import DEFAULT_FONT, DEFAULT_FONT_SIZE, DEFAULT_TEXT_COLOR, ANIMATION_TYPES
+from utils.constants import DEFAULT_FONT, DEFAULT_FONT_SIZE, DEFAULT_TEXT_COLOR, ANIMATION_TYPES
 
 
 class TextEditor(QWidget):

@@ -3,8 +3,8 @@
 import subprocess
 from pathlib import Path
 from typing import Optional, Callable, Dict, Any
-from .scene_generator import SceneGenerator
-from ..utils.constants import QUALITY_FLAGS, QUALITY_NAMES, DEFAULT_QUALITY
+from manim.scene_generator import SceneGenerator
+from utils.constants import QUALITY_FLAGS, QUALITY_NAMES, DEFAULT_QUALITY
 
 
 class ManimRenderer:
@@ -62,11 +62,14 @@ class ManimRenderer:
         
         quality_flag = self._get_quality_flag(config.get("render_settings", {}))
         
+        # Use absolute path for scene file
+        scene_file_abs = scene_file.resolve()
+        
         cmd = [
             "manim",
             quality_flag,
             "-o", str(output_dir),
-            str(scene_file),
+            str(scene_file_abs),
             scene_class
         ]
         
@@ -74,13 +77,22 @@ class ManimRenderer:
             if progress_callback:
                 progress_callback("Executing Manim...")
                 
-            # Execute Manim
+            # Execute Manim with better error handling
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                check=True
+                check=False,  # Don't raise on error, we'll handle it
+                cwd=str(scene_file_abs.parent)  # Run from scene file directory
             )
+            
+            # Check if command failed
+            if result.returncode != 0:
+                error_details = result.stderr if result.stderr else result.stdout if result.stdout else "Unknown error"
+                error_msg = f"Manim rendering failed (exit code {result.returncode}):\n{error_details}"
+                if progress_callback:
+                    progress_callback(f"Error: {error_msg}")
+                raise RuntimeError(error_msg)
             
             if progress_callback:
                 progress_callback("Render complete!")
@@ -131,14 +143,16 @@ class ManimRenderer:
                 
             return video_path
             
-        except subprocess.CalledProcessError as e:
-            error_details = e.stderr if e.stderr else e.stdout if e.stdout else "Unknown error"
-            error_msg = f"Manim rendering failed:\n{error_details}"
+        except FileNotFoundError:
+            error_msg = "Manim not found. Please install Manim: pip install manim"
             if progress_callback:
                 progress_callback(f"Error: {error_msg}")
             raise RuntimeError(error_msg)
-        except FileNotFoundError:
-            error_msg = "Manim not found. Please install Manim: pip install manim"
+        except RuntimeError:
+            # Re-raise RuntimeErrors (already handled above)
+            raise
+        except Exception as e:
+            error_msg = f"Unexpected error during rendering: {str(e)}"
             if progress_callback:
                 progress_callback(f"Error: {error_msg}")
             raise RuntimeError(error_msg)

@@ -29,6 +29,7 @@ ANIMATION_TYPES: Dict[str, str] = {
 
 # Manim animation mappings
 # Note: Some animations require specific parameters or work differently
+# Using only animations that are confirmed to exist in Manim Community Edition
 MANIM_ANIMATION_MAPPINGS: Dict[str, str] = {
     "fade_in": "FadeIn",
     "fade_out": "FadeOut",
@@ -38,15 +39,15 @@ MANIM_ANIMATION_MAPPINGS: Dict[str, str] = {
     "draw": "DrawBorderThenFill",
     "write": "Write",
     "grow_from_center": "GrowFromCenter",
-    "grow_from_edge": "GrowFromEdge",
+    "grow_from_edge": "GrowFromPoint",  # Using GrowFromPoint instead of GrowFromEdge
     "shrink_to_center": "ShrinkToCenter",
     "wiggle": "Wiggle",
     "flash": "Flash",
     "circumscribe": "Circumscribe",
     "indicate": "Indicate",
     "spin": "Rotate",  # Rotate with full rotation
-    "bounce_in": "BounceIn",
-    "fade_in_from_edge": "FadeInFromEdge"
+    "bounce_in": "FadeIn",  # BounceIn doesn't exist, using FadeIn
+    "fade_in_from_edge": "FadeIn"  # FadeInFromEdge doesn't exist, using FadeIn
 }
 
 # Aspect ratios

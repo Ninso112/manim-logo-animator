@@ -4,7 +4,7 @@ from typing import Dict, Any, Tuple
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox
 )
-from ...utils.constants import (
+from utils.constants import (
     ASPECT_RATIOS, FPS_OPTIONS, QUALITY_PRESETS,
     DEFAULT_FPS, DEFAULT_QUALITY
 )
