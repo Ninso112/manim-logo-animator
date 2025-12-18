@@ -38,12 +38,44 @@ class ManimRenderer:
             RuntimeError: If rendering fails or video file is not found.
             FileNotFoundError: If Manim is not installed.
         """
+        # Validate SVG path exists before generating scene
+        svg_path = config.get("svg_path")
+        if not svg_path:
+            error_msg = "No SVG file path provided in configuration"
+            if progress_callback:
+                progress_callback(f"Error: {error_msg}")
+            raise ValueError(error_msg)
+        
+        svg_path_obj = Path(svg_path)
+        if not svg_path_obj.exists():
+            error_msg = f"SVG file not found: {svg_path}"
+            if progress_callback:
+                progress_callback(f"Error: {error_msg}")
+            raise FileNotFoundError(error_msg)
+        
+        if not svg_path_obj.is_file():
+            error_msg = f"SVG path is not a file: {svg_path}"
+            if progress_callback:
+                progress_callback(f"Error: {error_msg}")
+            raise ValueError(error_msg)
+        
         if progress_callback:
             progress_callback("Generating scene code...")
             
         # Generate and save scene file
-        scene_file = self.scene_generator.save_scene_file(config)
-        scene_class = SceneGenerator.get_scene_class_name()
+        try:
+            scene_file = self.scene_generator.save_scene_file(config)
+            scene_class = SceneGenerator.get_scene_class_name()
+            
+            # Verify scene file was created
+            if not scene_file.exists():
+                raise RuntimeError(f"Scene file was not created: {scene_file}")
+                
+        except Exception as e:
+            error_msg = f"Failed to generate scene file: {str(e)}"
+            if progress_callback:
+                progress_callback(f"Error: {error_msg}")
+            raise RuntimeError(error_msg) from e
         
         if progress_callback:
             progress_callback("Starting Manim render...")
@@ -84,13 +116,21 @@ class ManimRenderer:
                 progress_callback("Executing Manim...")
                 
             # Execute Manim with better error handling
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                check=False,  # Don't raise on error, we'll handle it
-                cwd=str(scene_file_abs.parent)  # Run from scene file directory
-            )
+            # Add timeout to prevent hanging (30 minutes should be enough for most renders)
+            try:
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    check=False,  # Don't raise on error, we'll handle it
+                    cwd=str(scene_file_abs.parent),  # Run from scene file directory
+                    timeout=1800  # 30 minutes timeout
+                )
+            except subprocess.TimeoutExpired:
+                error_msg = "Manim rendering timed out after 30 minutes. The render may still be processing."
+                if progress_callback:
+                    progress_callback(f"Error: {error_msg}")
+                raise RuntimeError(error_msg)
             
             # Check if command failed
             if result.returncode != 0:
@@ -175,7 +215,16 @@ class ManimRenderer:
                 for qname in possible_quality_names:
                     exact_path = search_dir / scene_class / qname / f"{scene_class}.mp4"
                     if exact_path.exists() and exact_path.is_file():
+                        if progress_callback:
+                            progress_callback(f"Found video at: {exact_path}")
                         return exact_path
+                    
+                    # Also try without the scene_class subdirectory
+                    alt_path = search_dir / qname / f"{scene_class}.mp4"
+                    if alt_path.exists() and alt_path.is_file():
+                        if progress_callback:
+                            progress_callback(f"Found video at: {alt_path}")
+                        return alt_path
                 
                 # Search in scene_class directory for any quality subdirectory
                 scene_dir = search_dir / scene_class
@@ -198,6 +247,14 @@ class ManimRenderer:
                         # Check if scene name is in the file path or name
                         file_path_str = str(video_file).lower()
                         if scene_class.lower() in file_path_str:
+                            if progress_callback:
+                                progress_callback(f"Found video at: {video_file}")
+                            return video_file
+                        
+                        # Also check if filename matches scene class (case-insensitive)
+                        if video_file.stem.lower() == scene_class.lower():
+                            if progress_callback:
+                                progress_callback(f"Found video at: {video_file}")
                             return video_file
                 
                 # Last resort: get the most recently modified .mp4 file in the directory

@@ -110,13 +110,19 @@ class RenderSettings(QWidget):
             if aspect_key == "1:1":
                 height = width  # Square
             
+        # Ensure background color is in hex format (#RRGGBB)
+        bg_color = self.background_color.name()
+        # QColor.name() should return hex, but ensure it's valid
+        if not bg_color.startswith("#"):
+            bg_color = "#" + bg_color if len(bg_color) == 6 else DEFAULT_BACKGROUND_COLOR
+        
         return {
             "aspect_ratio": aspect_ratio,
             "width": width,
             "height": height,
             "fps": fps,
             "quality": quality_key,
-            "background_color": self.background_color.name()
+            "background_color": bg_color
         }
         
     def _select_background_color(self) -> None:

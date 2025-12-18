@@ -233,13 +233,29 @@ class LogoScreen(Scene):
             
         Raises:
             IOError: If file cannot be written.
+            ValueError: If required config keys are missing.
         """
-        scene_code = self.generate_scene_code(config)
+        # Validate required config keys
+        required_keys = ["svg_path", "animation_type"]
+        missing_keys = [key for key in required_keys if key not in config]
+        if missing_keys:
+            raise ValueError(f"Missing required config keys: {missing_keys}")
+        
+        try:
+            scene_code = self.generate_scene_code(config)
+        except KeyError as e:
+            raise ValueError(f"Missing required config key: {e}") from e
+        
         scene_file = self.temp_scene_dir / f"{scene_name}.py"
         
         try:
             with open(scene_file, 'w', encoding='utf-8') as f:
                 f.write(scene_code)
+            
+            # Verify file was written
+            if not scene_file.exists() or scene_file.stat().st_size == 0:
+                raise IOError(f"Scene file was not written correctly: {scene_file}")
+                
         except IOError as e:
             raise IOError(f"Failed to save scene file: {e}") from e
             
