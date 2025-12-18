@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QLabel, QProgressBar, QPushButton
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal as Signal
-from ...manim.renderer import ManimRenderer
+from manim.renderer import ManimRenderer
 
 
 class RenderWorker(QThread):

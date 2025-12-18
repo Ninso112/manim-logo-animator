@@ -3,22 +3,22 @@
 from typing import Dict, Any
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
-    QMenuBar, QStatusBar, QMenu, QAction, QMessageBox, QFileDialog
+    QMenuBar, QStatusBar, QMenu, QMessageBox, QFileDialog
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QKeySequence
+from PyQt6.QtGui import QKeySequence, QAction
 from pathlib import Path
 
-from .components.file_selector import FileSelector
-from .components.animation_selector import AnimationSelector
-from .components.text_editor import TextEditor
-from .components.render_settings import RenderSettings
-from .components.preview_widget import PreviewWidget
-from .dialogs.render_dialog import RenderDialog
-from ..manim.renderer import ManimRenderer
-from ..utils.constants import (
+from gui.components.file_selector import FileSelector
+from gui.components.animation_selector import AnimationSelector
+from gui.components.text_editor import TextEditor
+from gui.components.render_settings import RenderSettings
+from gui.components.preview_widget import PreviewWidget
+from gui.dialogs.render_dialog import RenderDialog
+from manim.renderer import ManimRenderer
+from utils.constants import (
     APP_NAME, APP_VERSION, MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT,
-    SPLITTER_LEFT_SIZE, SPLITTER_RIGHT_SIZE, PREVIEW_QUALITY
+    SPLITTER_LEFT_SIZE, SPLITTER_RIGHT_SIZE, PREVIEW_QUALITY, DEFAULT_BACKGROUND_COLOR
 )
 
 
@@ -218,12 +218,14 @@ class MainWindow(QMainWindow):
         Returns:
             Dict containing all animation configuration settings.
         """
+        render_settings = self.render_settings.get_settings()
         config = {
             "svg_path": self.file_selector.get_file_path(),
             "animation_type": self.animation_selector.get_animation_type(),
             "upper_text": self.upper_text_editor.get_text(),
             "lower_text": self.lower_text_editor.get_text(),
-            "render_settings": self.render_settings.get_settings()
+            "render_settings": render_settings,
+            "background_color": render_settings.get("background_color", DEFAULT_BACKGROUND_COLOR)
         }
         
         # Add font and color info if available
@@ -231,11 +233,13 @@ class MainWindow(QMainWindow):
         upper_color = self.upper_text_editor.get_color()
         config["upper_font"] = upper_font.family()
         config["upper_color"] = upper_color.name()
+        config["upper_animation"] = self.upper_text_editor.get_animation_type()
         
         lower_font = self.lower_text_editor.get_font()
         lower_color = self.lower_text_editor.get_color()
         config["lower_font"] = lower_font.family()
         config["lower_color"] = lower_color.name()
+        config["lower_animation"] = self.lower_text_editor.get_animation_type()
         
         return config
 

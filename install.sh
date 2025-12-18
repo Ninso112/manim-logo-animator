@@ -3,7 +3,10 @@
 # Manim Logo Animator Installation Script
 # This script detects the Linux distribution and installs all required dependencies
 
-set -e  # Exit on error
+# Ensure we're using bash
+if [ -z "$BASH_VERSION" ]; then
+    exec bash "$0" "$@"
+fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -27,6 +30,40 @@ print_warning() {
 
 print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Set error handling after function definitions
+set -e  # Exit on error
+
+# Check Python version
+check_python_version() {
+    if ! command -v python3 &> /dev/null; then
+        print_error "Python 3 is not installed."
+        exit 1
+    fi
+    
+    PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+    PYTHON_MAJOR=$(echo $PYTHON_VERSION | cut -d. -f1)
+    PYTHON_MINOR=$(echo $PYTHON_VERSION | cut -d. -f2)
+    
+    print_info "Detected Python version: $PYTHON_VERSION"
+    
+    # Manim supports Python 3.8-3.12
+    if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 8 ]); then
+        print_error "Python 3.8 or higher is required. Found: $PYTHON_VERSION"
+        exit 1
+    fi
+    
+    if [ "$PYTHON_MAJOR" -gt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -gt 12 ]); then
+        print_warning "Python $PYTHON_VERSION detected. Manim officially supports Python 3.8-3.12."
+        print_warning "You may encounter compatibility issues. Consider using Python 3.11 or 3.12."
+        read -p "Continue anyway? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            print_info "Installation cancelled. Please install Python 3.11 or 3.12."
+            exit 1
+        fi
+    fi
 }
 
 # Check if running as root (for package installation)
@@ -184,7 +221,22 @@ install_python_deps() {
         exit 1
     fi
     
-    $PIP_CMD install --user -r requirements.txt
+    # Try to install dependencies, with fallback for av/skia issues
+    if ! $PIP_CMD install --user -r requirements.txt 2>&1 | tee /tmp/manim_install.log; then
+        if grep -q "Failed building wheel for av\|skia-python" /tmp/manim_install.log; then
+            print_warning "Installation failed due to Python version compatibility."
+            print_error "Python 3.13+ is not yet supported by Manim dependencies."
+            print_info "Please use Python 3.11 or 3.12 instead."
+            print_info "You can install Python 3.12 and create a virtual environment:"
+            print_info "  python3.12 -m venv venv"
+            print_info "  source venv/bin/activate"
+            print_info "  pip install -r requirements.txt"
+            exit 1
+        else
+            print_error "Failed to install dependencies. Check the error above."
+            exit 1
+        fi
+    fi
     
     print_success "Python dependencies installed"
 }
@@ -245,6 +297,9 @@ main() {
     print_info "========================================"
     echo
     
+    # Check Python version first
+    check_python_version
+    
     # Detect distribution
     detect_distro
     
@@ -256,33 +311,37 @@ main() {
     fi
     
     # Install system dependencies based on distribution
+    # Export all needed functions and variables for sudo execution
+    EXPORT_FUNCS="$(declare -f print_info print_success print_warning print_error)"
+    EXPORT_VARS="RED='${RED}' GREEN='${GREEN}' YELLOW='${YELLOW}' BLUE='${BLUE}' NC='${NC}'"
+    
     case $DISTRO in
         ubuntu|debian)
             if [ "$EUID" -eq 0 ]; then
                 install_debian
             else
-                sudo bash -c "$(declare -f install_debian); install_debian"
+                sudo bash -c "${EXPORT_VARS}; ${EXPORT_FUNCS}; $(declare -f install_debian); install_debian"
             fi
             ;;
         fedora|rhel|centos)
             if [ "$EUID" -eq 0 ]; then
                 install_fedora
             else
-                sudo bash -c "$(declare -f install_fedora); install_fedora"
+                sudo bash -c "${EXPORT_VARS}; ${EXPORT_FUNCS}; $(declare -f install_fedora); install_fedora"
             fi
             ;;
         arch|manjaro)
             if [ "$EUID" -eq 0 ]; then
                 install_arch
             else
-                sudo bash -c "$(declare -f install_arch); install_arch"
+                sudo bash -c "${EXPORT_VARS}; ${EXPORT_FUNCS}; $(declare -f install_arch); install_arch"
             fi
             ;;
         opensuse*)
             if [ "$EUID" -eq 0 ]; then
                 install_opensuse
             else
-                sudo bash -c "$(declare -f install_opensuse); install_opensuse"
+                sudo bash -c "${EXPORT_VARS}; ${EXPORT_FUNCS}; $(declare -f install_opensuse); install_opensuse"
             fi
             ;;
         *)

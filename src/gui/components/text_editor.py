@@ -1,16 +1,17 @@
 """Text editor component for upper and lower text."""
 
+from typing import Optional
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit,
-    QPushButton, QFontDialog, QColorDialog
+    QPushButton, QFontDialog, QColorDialog, QComboBox
 )
 from PyQt6.QtGui import QColor, QFont
 from PyQt6.QtCore import Qt
-from ...utils.constants import DEFAULT_FONT, DEFAULT_FONT_SIZE, DEFAULT_TEXT_COLOR
+from utils.constants import DEFAULT_FONT, DEFAULT_FONT_SIZE, DEFAULT_TEXT_COLOR, ANIMATION_TYPES
 
 
 class TextEditor(QWidget):
-    """Widget for editing text with font and color options."""
+    """Widget for editing text with font, color, and animation options."""
     
     def __init__(self, label_text: str = "Text") -> None:
         """
@@ -24,6 +25,7 @@ class TextEditor(QWidget):
         self.font = QFont(DEFAULT_FONT, DEFAULT_FONT_SIZE)
         self.color = QColor(DEFAULT_TEXT_COLOR)
         self.text_edit: QTextEdit
+        self.animation_combo: QComboBox
         self._setup_ui()
         
     def _setup_ui(self) -> None:
@@ -40,6 +42,18 @@ class TextEditor(QWidget):
         self.text_edit.setPlaceholderText(f"Enter {self.label_text.lower()} here...")
         self.text_edit.setMaximumHeight(100)
         layout.addWidget(self.text_edit)
+        
+        # Animation selection
+        animation_layout = QHBoxLayout()
+        animation_label = QLabel("Animation:")
+        animation_layout.addWidget(animation_label)
+        
+        self.animation_combo = QComboBox()
+        self.animation_combo.addItem("None")  # No animation option
+        self.animation_combo.addItems(list(ANIMATION_TYPES.keys()))
+        animation_layout.addWidget(self.animation_combo)
+        animation_layout.addStretch()
+        layout.addLayout(animation_layout)
         
         # Font and color controls
         controls_layout = QHBoxLayout()
@@ -106,4 +120,16 @@ class TextEditor(QWidget):
             QColor: The currently selected color.
         """
         return self.color
+        
+    def get_animation_type(self) -> Optional[str]:
+        """
+        Get the selected animation type for the text.
+        
+        Returns:
+            str: The animation type identifier, or None if "None" is selected.
+        """
+        current_text = self.animation_combo.currentText()
+        if current_text == "None":
+            return None
+        return ANIMATION_TYPES.get(current_text)
 

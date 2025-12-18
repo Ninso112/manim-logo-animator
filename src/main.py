@@ -1,6 +1,14 @@
 """Main entry point for Manim Logo Animator."""
 
 import sys
+from pathlib import Path
+
+# Add the src directory to the Python path BEFORE any other imports
+# This ensures relative imports work when running the script directly
+src_dir = Path(__file__).parent
+if str(src_dir) not in sys.path:
+    sys.path.insert(0, str(src_dir))
+
 from typing import NoReturn
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt
@@ -18,9 +26,8 @@ def main() -> NoReturn:
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
     
-    # Enable high DPI scaling
-    app.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
-    app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+    # High DPI scaling is enabled by default in PyQt6
+    # No need to set these attributes (they were removed in PyQt6)
     
     try:
         window = MainWindow()

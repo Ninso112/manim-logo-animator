@@ -9,17 +9,45 @@ APP_VERSION = "1.0.0"
 # Animation types mapping
 ANIMATION_TYPES: Dict[str, str] = {
     "Fade In": "fade_in",
+    "Fade Out": "fade_out",
     "Scale Up": "scale_up",
+    "Scale Down": "scale_down",
     "Rotate": "rotate",
-    "Draw": "draw"
+    "Draw": "draw",
+    "Write": "write",
+    "Grow From Center": "grow_from_center",
+    "Grow From Edge": "grow_from_edge",
+    "Shrink To Center": "shrink_to_center",
+    "Wiggle": "wiggle",
+    "Flash": "flash",
+    "Circumscribe": "circumscribe",
+    "Indicate": "indicate",
+    "Spin": "spin",
+    "Bounce In": "bounce_in",
+    "Fade In From Edge": "fade_in_from_edge"
 }
 
 # Manim animation mappings
+# Note: Some animations require specific parameters or work differently
+# Using only animations that are confirmed to exist in Manim Community Edition
 MANIM_ANIMATION_MAPPINGS: Dict[str, str] = {
     "fade_in": "FadeIn",
+    "fade_out": "FadeOut",
     "scale_up": "GrowFromCenter",
+    "scale_down": "ShrinkToCenter",
     "rotate": "Rotate",
-    "draw": "DrawBorderThenFill"
+    "draw": "DrawBorderThenFill",
+    "write": "Write",
+    "grow_from_center": "GrowFromCenter",
+    "grow_from_edge": "GrowFromCenter",  # GrowFromPoint may not exist, using GrowFromCenter
+    "shrink_to_center": "ShrinkToCenter",
+    "wiggle": "Wiggle",
+    "flash": "Flash",
+    "circumscribe": "Circumscribe",
+    "indicate": "Indicate",
+    "spin": "Rotate",  # Rotate with full rotation
+    "bounce_in": "FadeIn",  # BounceIn doesn't exist, using FadeIn
+    "fade_in_from_edge": "FadeIn"  # FadeInFromEdge doesn't exist, using FadeIn
 }
 
 # Aspect ratios
@@ -64,6 +92,9 @@ QUALITY_NAMES: Dict[str, str] = {
 DEFAULT_FONT = "Arial"
 DEFAULT_FONT_SIZE = 24
 DEFAULT_TEXT_COLOR = "#FFFFFF"
+
+# Default background color
+DEFAULT_BACKGROUND_COLOR = "#000000"  # Black
 
 # Window settings
 MIN_WINDOW_WIDTH = 1200

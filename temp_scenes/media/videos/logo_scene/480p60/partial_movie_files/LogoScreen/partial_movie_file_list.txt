@@ -1,0 +1,7 @@
+# This file is used internally by FFMPEG.
+file 'file:/home/ninso/Documents/manim-logo-animator/temp_scenes/media/videos/logo_scene/480p60/partial_movie_files/LogoScreen/10789645_3436416124_223132457.mp4'
+file 'file:/home/ninso/Documents/manim-logo-animator/temp_scenes/media/videos/logo_scene/480p60/partial_movie_files/LogoScreen/2012079022_2574473371_2374751644.mp4'
+file 'file:/home/ninso/Documents/manim-logo-animator/temp_scenes/media/videos/logo_scene/480p60/partial_movie_files/LogoScreen/2012079022_3695407900_3199486099.mp4'
+file 'file:/home/ninso/Documents/manim-logo-animator/temp_scenes/media/videos/logo_scene/480p60/partial_movie_files/LogoScreen/2012079022_2574473371_1911097647.mp4'
+file 'file:/home/ninso/Documents/manim-logo-animator/temp_scenes/media/videos/logo_scene/480p60/partial_movie_files/LogoScreen/2012079022_2029909513_3606665190.mp4'
+file 'file:/home/ninso/Documents/manim-logo-animator/temp_scenes/media/videos/logo_scene/480p60/partial_movie_files/LogoScreen/2012079022_1432596116_2467829784.mp4'
