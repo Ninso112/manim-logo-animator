@@ -19,7 +19,7 @@ class AnimationSelector(QWidget):
         layout = QVBoxLayout(self)
         layout.setSpacing(5)
         
-        title = QLabel("Animation Type")
+        title = QLabel("Logo Animation Type")
         title.setStyleSheet("font-weight: bold; font-size: 12pt;")
         layout.addWidget(title)
         

@@ -231,11 +231,13 @@ class MainWindow(QMainWindow):
         upper_color = self.upper_text_editor.get_color()
         config["upper_font"] = upper_font.family()
         config["upper_color"] = upper_color.name()
+        config["upper_animation"] = self.upper_text_editor.get_animation_type()
         
         lower_font = self.lower_text_editor.get_font()
         lower_color = self.lower_text_editor.get_color()
         config["lower_font"] = lower_font.family()
         config["lower_color"] = lower_color.name()
+        config["lower_animation"] = self.lower_text_editor.get_animation_type()
         
         return config
 

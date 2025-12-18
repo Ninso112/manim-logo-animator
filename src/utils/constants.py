@@ -9,17 +9,44 @@ APP_VERSION = "1.0.0"
 # Animation types mapping
 ANIMATION_TYPES: Dict[str, str] = {
     "Fade In": "fade_in",
+    "Fade Out": "fade_out",
     "Scale Up": "scale_up",
+    "Scale Down": "scale_down",
     "Rotate": "rotate",
-    "Draw": "draw"
+    "Draw": "draw",
+    "Write": "write",
+    "Grow From Center": "grow_from_center",
+    "Grow From Edge": "grow_from_edge",
+    "Shrink To Center": "shrink_to_center",
+    "Wiggle": "wiggle",
+    "Flash": "flash",
+    "Circumscribe": "circumscribe",
+    "Indicate": "indicate",
+    "Spin": "spin",
+    "Bounce In": "bounce_in",
+    "Fade In From Edge": "fade_in_from_edge"
 }
 
 # Manim animation mappings
+# Note: Some animations require specific parameters or work differently
 MANIM_ANIMATION_MAPPINGS: Dict[str, str] = {
     "fade_in": "FadeIn",
+    "fade_out": "FadeOut",
     "scale_up": "GrowFromCenter",
+    "scale_down": "ShrinkToCenter",
     "rotate": "Rotate",
-    "draw": "DrawBorderThenFill"
+    "draw": "DrawBorderThenFill",
+    "write": "Write",
+    "grow_from_center": "GrowFromCenter",
+    "grow_from_edge": "GrowFromEdge",
+    "shrink_to_center": "ShrinkToCenter",
+    "wiggle": "Wiggle",
+    "flash": "Flash",
+    "circumscribe": "Circumscribe",
+    "indicate": "Indicate",
+    "spin": "Rotate",  # Rotate with full rotation
+    "bounce_in": "BounceIn",
+    "fade_in_from_edge": "FadeInFromEdge"
 }
 
 # Aspect ratios

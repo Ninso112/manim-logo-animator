@@ -60,6 +60,52 @@ class SceneGenerator:
             # Escape backslashes, quotes, and newlines for double-quoted strings
             return text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
         
+        # Get text animation types
+        upper_animation = config.get("upper_animation")
+        lower_animation = config.get("lower_animation")
+        
+        # Helper function to get animation code
+        def get_animation_code(obj_name: str, anim_type: str, is_text: bool = False) -> str:
+            """Generate animation code for an object."""
+            if not anim_type:
+                return f"self.add({obj_name})"
+            
+            anim_class = MANIM_ANIMATION_MAPPINGS.get(anim_type, "FadeIn")
+            
+            # Special handling for different animation types
+            if anim_type == "rotate":
+                if is_text:
+                    return f"self.play({anim_class}({obj_name}, angle=PI), run_time=1.5)"
+                else:
+                    return f"self.play({anim_class}({obj_name}, angle=2*PI), run_time=2)"
+            elif anim_type == "spin":
+                # Full rotation
+                return f"self.play({anim_class}({obj_name}, angle=2*PI), run_time=2)"
+            elif anim_type == "write":
+                # Write only works with Text objects
+                if is_text:
+                    return f"self.play({anim_class}({obj_name}), run_time=1.5)"
+                else:
+                    return f"self.play(FadeIn({obj_name}), run_time=1.5)"
+            elif anim_type == "wiggle":
+                return f"self.play({anim_class}({obj_name}), run_time=1)"
+            elif anim_type == "flash":
+                return f"self.play({anim_class}({obj_name}), run_time=0.5)"
+            elif anim_type == "grow_from_edge":
+                # GrowFromEdge needs direction parameter
+                if is_text:
+                    return f"self.play({anim_class}({obj_name}, direction=UP), run_time=1.5)"
+                else:
+                    return f"self.play({anim_class}({obj_name}, direction=UP), run_time=2)"
+            elif anim_type == "fade_in_from_edge":
+                # FadeInFromEdge needs direction parameter
+                if is_text:
+                    return f"self.play({anim_class}({obj_name}, direction=UP), run_time=1.5)"
+                else:
+                    return f"self.play({anim_class}({obj_name}, direction=UP), run_time=2)"
+            else:
+                return f"self.play({anim_class}({obj_name}), run_time=1.5)"
+        
         # Generate scene code
         scene_code = f'''from manim import *
 import os
@@ -91,6 +137,8 @@ class LogoScreen(Scene):
             upper_font = config.get("upper_font", DEFAULT_FONT)
             upper_color = config.get("upper_color", DEFAULT_TEXT_COLOR)
             upper_text_escaped = escape_text(upper_text)
+            upper_anim_code = get_animation_code("upper_text_obj", upper_animation, is_text=True)
+            
             scene_code += f'''        upper_text_obj = Text(
             "{upper_text_escaped}",
             font="{upper_font}",
@@ -98,7 +146,7 @@ class LogoScreen(Scene):
             color="{upper_color}"
         )
         upper_text_obj.move_to(UP * 2.5)
-        self.add(upper_text_obj)
+        {upper_anim_code}
         
 '''
         
@@ -109,6 +157,8 @@ class LogoScreen(Scene):
             lower_font = config.get("lower_font", DEFAULT_FONT)
             lower_color = config.get("lower_color", DEFAULT_TEXT_COLOR)
             lower_text_escaped = escape_text(lower_text)
+            lower_anim_code = get_animation_code("lower_text_obj", lower_animation, is_text=True)
+            
             scene_code += f'''        lower_text_obj = Text(
             "{lower_text_escaped}",
             font="{lower_font}",
@@ -116,12 +166,14 @@ class LogoScreen(Scene):
             color="{lower_color}"
         )
         lower_text_obj.move_to(DOWN * 2.5)
-        self.add(lower_text_obj)
+        {lower_anim_code}
         
 '''
         
+        # Animate logo
+        logo_anim_code = get_animation_code("logo", animation_type, is_text=False)
         scene_code += f'''        # Animate logo
-        self.play({anim_class}(logo), run_time=2)
+        {logo_anim_code}
         self.wait(1)
 '''
         
