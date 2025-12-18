@@ -25,7 +25,7 @@ class LogoScreen(Scene):
         # Upper text
         # Upper text
         upper_text_obj = Text(
-            "test",
+            "test2",
             font="Arial",
             font_size=48,
             color="#ffffff"
@@ -33,7 +33,7 @@ class LogoScreen(Scene):
         upper_text_obj.move_to(UP * 2.5)
         # Lower text
         lower_text_obj = Text(
-            "test3",
+            "test4",
             font="Arial",
             font_size=48,
             color="#ffffff"
