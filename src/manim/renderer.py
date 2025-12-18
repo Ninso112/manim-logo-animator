@@ -95,51 +95,97 @@ class ManimRenderer:
                 raise RuntimeError(error_msg)
             
             if progress_callback:
-                progress_callback("Render complete!")
+                progress_callback("Render complete! Searching for video file...")
                 
             # Find the output video file
             # Manim outputs to: output_dir/scene_class/quality/scene_class.mp4
+            # But quality names can vary (480p15, 480p60, 1080p60, etc.)
             quality_name = self._get_quality_name(config.get("render_settings", {}))
+            
+            # Search for video file recursively in output directory
+            def find_video_file(search_dir: Path, scene_name: str) -> Optional[Path]:
+                """Recursively search for the video file."""
+                # Try exact quality name first
+                exact_path = search_dir / scene_class / quality_name / f"{scene_class}.mp4"
+                if exact_path.exists():
+                    return exact_path
+                
+                # Search in scene_class directory for any quality subdirectory
+                scene_dir = search_dir / scene_class
+                if scene_dir.exists():
+                    for subdir in scene_dir.iterdir():
+                        if subdir.is_dir():
+                            video_file = subdir / f"{scene_class}.mp4"
+                            if video_file.exists():
+                                return video_file
+                
+                # Search recursively in all subdirectories
+                for video_file in search_dir.rglob(f"{scene_class}.mp4"):
+                    if video_file.is_file():
+                        return video_file
+                
+                return None
             
             # If custom output path specified, use it
             if output_path:
-                # Manim might have created it in a subdirectory, but we want the specified path
-                # Check if Manim created it in the expected location first
-                manim_path = output_dir / scene_class / quality_name / f"{scene_class}.mp4"
-                if manim_path.exists():
-                    # Copy or move to desired location, or just return the actual path
-                    # For now, return the actual Manim output path
-                    video_path = manim_path
-                else:
+                # First try to find in the output directory
+                video_path = find_video_file(output_dir, scene_class)
+                
+                if not video_path:
                     # Try alternative locations
                     alt_paths = [
                         output_dir / f"{scene_class}.mp4",
                         output_path
                     ]
-                    video_path = None
                     for path in alt_paths:
-                        if path.exists():
-                            video_path = path
+                        if Path(path).exists():
+                            video_path = Path(path)
                             break
-                    
-                    if not video_path:
-                        raise RuntimeError(f"Rendered video not found. Check output directory: {output_dir}")
-            else:
-                video_path = output_dir / scene_class / quality_name / f"{scene_class}.mp4"
                 
-                if not video_path.exists():
+                if not video_path or not video_path.exists():
+                    # Last resort: search in common Manim output locations
+                    common_dirs = [
+                        output_dir,
+                        Path.cwd() / "media" / "videos" / scene_class,
+                        Path.home() / "manim_output" / scene_class
+                    ]
+                    for search_dir in common_dirs:
+                        if search_dir.exists():
+                            found = find_video_file(search_dir, scene_class)
+                            if found:
+                                video_path = found
+                                break
+                    
+                    if not video_path or not video_path.exists():
+                        raise RuntimeError(
+                            f"Rendered video not found. Checked:\n"
+                            f"- {output_dir / scene_class / quality_name / f'{scene_class}.mp4'}\n"
+                            f"- {output_dir}\n"
+                            f"- {output_path}\n"
+                            f"Please check the output directory manually."
+                        )
+            else:
+                video_path = find_video_file(output_dir, scene_class)
+                
+                if not video_path or not video_path.exists():
                     # Try alternative paths
                     alt_paths = [
                         output_dir / f"{scene_class}.mp4",
-                        output_dir / scene_class / f"{scene_class}.mp4"
+                        output_dir / scene_class / f"{scene_class}.mp4",
+                        Path.cwd() / "media" / "videos" / scene_class / quality_name / f"{scene_class}.mp4"
                     ]
                     for path in alt_paths:
-                        if path.exists():
-                            video_path = path
+                        if Path(path).exists():
+                            video_path = Path(path)
                             break
                     
-                    if not video_path.exists():
-                        raise RuntimeError(f"Rendered video not found. Check output directory: {output_dir}")
+                    if not video_path or not video_path.exists():
+                        raise RuntimeError(
+                            f"Rendered video not found. Checked:\n"
+                            f"- {output_dir / scene_class / quality_name / f'{scene_class}.mp4'}\n"
+                            f"- {output_dir}\n"
+                            f"Please check the output directory manually."
+                        )
                 
             return video_path
             

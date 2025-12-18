@@ -2,11 +2,12 @@
 
 from typing import Dict, Any, Tuple
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QPushButton, QColorDialog
 )
+from PyQt6.QtGui import QColor
 from utils.constants import (
     ASPECT_RATIOS, FPS_OPTIONS, QUALITY_PRESETS,
-    DEFAULT_FPS, DEFAULT_QUALITY
+    DEFAULT_FPS, DEFAULT_QUALITY, DEFAULT_BACKGROUND_COLOR
 )
 
 
@@ -19,6 +20,7 @@ class RenderSettings(QWidget):
         self.aspect_combo: QComboBox
         self.fps_combo: QComboBox
         self.quality_combo: QComboBox
+        self.background_color = QColor(DEFAULT_BACKGROUND_COLOR)
         self._setup_ui()
         
     def _setup_ui(self) -> None:
@@ -65,6 +67,18 @@ class RenderSettings(QWidget):
         quality_layout.addStretch()
         layout.addLayout(quality_layout)
         
+        # Background Color
+        bg_color_layout = QHBoxLayout()
+        bg_color_label = QLabel("Background:")
+        bg_color_layout.addWidget(bg_color_label)
+        
+        self.bg_color_btn = QPushButton("Color...")
+        self.bg_color_btn.clicked.connect(self._select_background_color)
+        self._update_bg_color_button()
+        bg_color_layout.addWidget(self.bg_color_btn)
+        bg_color_layout.addStretch()
+        layout.addLayout(bg_color_layout)
+        
     def get_settings(self) -> Dict[str, Any]:
         """
         Get current render settings.
@@ -101,6 +115,22 @@ class RenderSettings(QWidget):
             "width": width,
             "height": height,
             "fps": fps,
-            "quality": quality_key
+            "quality": quality_key,
+            "background_color": self.background_color.name()
         }
+        
+    def _select_background_color(self) -> None:
+        """Open color dialog and update background color if valid."""
+        color = QColorDialog.getColor(self.background_color, self, "Select Background Color")
+        if color.isValid():
+            self.background_color = color
+            self._update_bg_color_button()
+            
+    def _update_bg_color_button(self) -> None:
+        """Update the background color button appearance."""
+        color_name = self.background_color.name()
+        self.bg_color_btn.setText(f"Color... ({color_name})")
+        self.bg_color_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {color_name}; color: {'white' if self.background_color.lightness() < 128 else 'black'}; }}"
+        )
 

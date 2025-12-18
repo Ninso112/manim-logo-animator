@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Dict, Any
 from utils.constants import (
-    MANIM_ANIMATION_MAPPINGS, DEFAULT_FONT, DEFAULT_TEXT_COLOR
+    MANIM_ANIMATION_MAPPINGS, DEFAULT_FONT, DEFAULT_TEXT_COLOR, DEFAULT_BACKGROUND_COLOR
 )
 
 
@@ -103,15 +103,22 @@ class SceneGenerator:
             else:
                 return f"self.play({anim_class}({obj_name}), run_time=1.5)"
         
+        # Get background color
+        background_color = config.get("background_color", DEFAULT_BACKGROUND_COLOR)
+        
         # Generate scene code
         # Note: Resolution is handled by Manim quality flags, not in scene code
         scene_code = f'''from manim import *
 import os
 
 config.frame_rate = {fps}
+config.background_color = "{background_color}"
 
 class LogoScreen(Scene):
     def construct(self):
+        # Set background color
+        self.camera.background_color = "{background_color}"
+        
         # Load SVG
         svg_path = {svg_path_repr}
         if not os.path.exists(svg_path):
