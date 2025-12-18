@@ -10,7 +10,7 @@ class LogoScreen(Scene):
         self.camera.background_color = "#00ff00"
         
         # Load SVG
-        svg_path = '/home/ninso/Downloads/Solid_Logo.svg'
+        svg_path = '/home/ninso/Downloads/Hammer_and_sickle.svg'
         if not os.path.exists(svg_path):
             raise FileNotFoundError(f"SVG file not found: {svg_path}")
         
@@ -32,7 +32,7 @@ class LogoScreen(Scene):
         upper_text_obj.move_to(UP * 2.5)
         # Lower text
         lower_text_obj = Text(
-            "test2",
+            "test",
             font="Arial",
             font_size=48,
             color="#ffffff"
@@ -40,7 +40,7 @@ class LogoScreen(Scene):
         lower_text_obj.move_to(DOWN * 2.5)
 
         # Animate in sequence
-        self.play(FadeIn(upper_text_obj), run_time=1.5)
+        self.play(DrawBorderThenFill(upper_text_obj), run_time=1.5)
         self.wait(0.5)
         
         # Animate logo
@@ -48,6 +48,6 @@ class LogoScreen(Scene):
         self.wait(0.5)
         
         # Animate lower text
-        self.play(FadeOut(lower_text_obj), run_time=1.5)
+        self.play(DrawBorderThenFill(lower_text_obj), run_time=1.5)
         
         self.wait(1)
