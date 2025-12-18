@@ -39,7 +39,7 @@ MANIM_ANIMATION_MAPPINGS: Dict[str, str] = {
     "draw": "DrawBorderThenFill",
     "write": "Write",
     "grow_from_center": "GrowFromCenter",
-    "grow_from_edge": "GrowFromPoint",  # Using GrowFromPoint instead of GrowFromEdge
+    "grow_from_edge": "GrowFromCenter",  # GrowFromPoint may not exist, using GrowFromCenter
     "shrink_to_center": "ShrinkToCenter",
     "wiggle": "Wiggle",
     "flash": "Flash",

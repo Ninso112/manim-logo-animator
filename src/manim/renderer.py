@@ -65,6 +65,11 @@ class ManimRenderer:
         # Use absolute path for scene file
         scene_file_abs = scene_file.resolve()
         
+        # Manim uses -o for output directory, but we also need to ensure
+        # the directory exists and is writable
+        output_dir = Path(output_dir).resolve()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
         cmd = [
             "manim",
             quality_flag,
@@ -89,9 +94,18 @@ class ManimRenderer:
             # Check if command failed
             if result.returncode != 0:
                 error_details = result.stderr if result.stderr else result.stdout if result.stdout else "Unknown error"
-                error_msg = f"Manim rendering failed (exit code {result.returncode}):\n{error_details}"
+                # Include both stdout and stderr for better debugging
+                full_output = ""
+                if result.stdout:
+                    full_output += f"STDOUT:\n{result.stdout}\n\n"
+                if result.stderr:
+                    full_output += f"STDERR:\n{result.stderr}\n\n"
+                if not full_output:
+                    full_output = "Unknown error - no output from Manim"
+                
+                error_msg = f"Manim rendering failed (exit code {result.returncode}):\n{full_output}"
                 if progress_callback:
-                    progress_callback(f"Error: {error_msg}")
+                    progress_callback(f"Error: Manim failed with exit code {result.returncode}")
                 raise RuntimeError(error_msg)
             
             if progress_callback:
@@ -100,37 +114,84 @@ class ManimRenderer:
             # Find the output video file
             # Manim outputs to: output_dir/scene_class/quality/scene_class.mp4
             # But quality names can vary (480p15, 480p60, 1080p60, etc.)
-            quality_name = self._get_quality_name(config.get("render_settings", {}))
+            # They depend on both quality preset and FPS
+            render_settings = config.get("render_settings", {})
+            quality_name = self._get_quality_name(render_settings)
+            fps = render_settings.get("fps", 60)
+            
+            # Generate possible quality names based on FPS
+            # Manim uses format like "1080p60", "720p30", etc.
+            def get_possible_quality_names(base_name: str, fps: int) -> list[str]:
+                """Generate possible quality directory names."""
+                names = [base_name]  # Start with the base name
+                # Try variations with FPS
+                if "p" in base_name:
+                    parts = base_name.split("p")
+                    if len(parts) == 2:
+                        resolution = parts[0]
+                        # Add FPS variations
+                        names.append(f"{resolution}p{fps}")
+                        names.append(f"{resolution}p15")  # Default FPS
+                        names.append(f"{resolution}p30")
+                        names.append(f"{resolution}p60")
+                        names.append(f"{resolution}p90")
+                        names.append(f"{resolution}p144")
+                else:
+                    # If no "p" in name, try adding FPS
+                    names.append(f"{base_name}p{fps}")
+                    names.append(f"{base_name}p15")
+                    names.append(f"{base_name}p30")
+                    names.append(f"{base_name}p60")
+                return names
+            
+            possible_quality_names = get_possible_quality_names(quality_name, fps)
             
             # Search for video file recursively in output directory
             def find_video_file(search_dir: Path, scene_name: str) -> Optional[Path]:
                 """Recursively search for the video file."""
-                # Try exact quality name first
-                exact_path = search_dir / scene_class / quality_name / f"{scene_class}.mp4"
-                if exact_path.exists():
-                    return exact_path
+                if not search_dir.exists():
+                    return None
+                
+                # Try exact quality names first
+                for qname in possible_quality_names:
+                    exact_path = search_dir / scene_class / qname / f"{scene_class}.mp4"
+                    if exact_path.exists():
+                        return exact_path
                 
                 # Search in scene_class directory for any quality subdirectory
                 scene_dir = search_dir / scene_class
-                if scene_dir.exists():
+                if scene_dir.exists() and scene_dir.is_dir():
                     for subdir in scene_dir.iterdir():
                         if subdir.is_dir():
                             video_file = subdir / f"{scene_class}.mp4"
                             if video_file.exists():
                                 return video_file
+                            # Also try with partial scene name match
+                            for mp4_file in subdir.glob("*.mp4"):
+                                if scene_class.lower() in mp4_file.stem.lower():
+                                    return mp4_file
                 
-                # Search recursively in all subdirectories
-                for video_file in search_dir.rglob(f"{scene_class}.mp4"):
+                # Search recursively in all subdirectories for any .mp4 file with scene name
+                for video_file in search_dir.rglob("*.mp4"):
                     if video_file.is_file():
-                        return video_file
+                        # Check if scene name is in the file path or name
+                        if scene_class in video_file.name or scene_class in str(video_file.parent):
+                            return video_file
+                
+                # Last resort: get the most recently modified .mp4 file in the directory
+                mp4_files = list(search_dir.rglob("*.mp4"))
+                if mp4_files:
+                    # Sort by modification time, most recent first
+                    mp4_files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+                    return mp4_files[0]
                 
                 return None
             
-            # If custom output path specified, use it
+            # Search for video file
+            video_path = find_video_file(output_dir, scene_class)
+            
+            # If custom output path specified, try to copy/move the file there
             if output_path:
-                # First try to find in the output directory
-                video_path = find_video_file(output_dir, scene_class)
-                
                 if not video_path:
                     # Try alternative locations
                     alt_paths = [
@@ -146,8 +207,8 @@ class ManimRenderer:
                     # Last resort: search in common Manim output locations
                     common_dirs = [
                         output_dir,
-                        Path.cwd() / "media" / "videos" / scene_class,
-                        Path.home() / "manim_output" / scene_class
+                        Path.cwd() / "media" / "videos",
+                        Path.home() / "manim_output"
                     ]
                     for search_dir in common_dirs:
                         if search_dir.exists():
@@ -155,18 +216,52 @@ class ManimRenderer:
                             if found:
                                 video_path = found
                                 break
-                    
-                    if not video_path or not video_path.exists():
-                        raise RuntimeError(
-                            f"Rendered video not found. Checked:\n"
-                            f"- {output_dir / scene_class / quality_name / f'{scene_class}.mp4'}\n"
-                            f"- {output_dir}\n"
-                            f"- {output_path}\n"
-                            f"Please check the output directory manually."
-                        )
-            else:
-                video_path = find_video_file(output_dir, scene_class)
                 
+                # If we found a video but it's not at the requested location, copy it
+                if video_path and video_path.exists() and video_path != output_path:
+                    try:
+                        import shutil
+                        output_path = Path(output_path)
+                        output_path.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(video_path, output_path)
+                        video_path = output_path
+                        if progress_callback:
+                            progress_callback(f"Video copied to: {output_path}")
+                    except Exception as e:
+                        # If copy fails, use the original location
+                        if progress_callback:
+                            progress_callback(f"Warning: Could not copy to requested location: {e}")
+                
+                if not video_path or not video_path.exists():
+                    # List all files in output directory for debugging
+                    debug_info = f"Checked paths:\n"
+                    debug_info += f"- {output_dir / scene_class / quality_name / f'{scene_class}.mp4'}\n"
+                    for qname in possible_quality_names:
+                        debug_info += f"- {output_dir / scene_class / qname / f'{scene_class}.mp4'}\n"
+                    debug_info += f"- {output_dir}\n"
+                    debug_info += f"- {output_path}\n"
+                    
+                    # List actual files found
+                    if output_dir.exists():
+                        debug_info += f"\nFiles found in output directory:\n"
+                        for item in output_dir.rglob("*"):
+                            if item.is_file():
+                                debug_info += f"  {item}\n"
+                    
+                    # Also check common Manim locations
+                    for common_dir in [Path.cwd() / "media" / "videos", Path.home() / "manim_output"]:
+                        if common_dir.exists():
+                            debug_info += f"\nFiles found in {common_dir}:\n"
+                            for item in common_dir.rglob("*.mp4"):
+                                if item.is_file():
+                                    debug_info += f"  {item}\n"
+                    
+                    raise RuntimeError(
+                        f"Rendered video not found.\n{debug_info}\n"
+                        f"Please check the output directory manually."
+                    )
+            else:
+                # No custom output path, just find the video
                 if not video_path or not video_path.exists():
                     # Try alternative paths
                     alt_paths = [
@@ -180,13 +275,49 @@ class ManimRenderer:
                             break
                     
                     if not video_path or not video_path.exists():
+                        # Search in common Manim output locations
+                        common_dirs = [
+                            Path.cwd() / "media" / "videos",
+                            Path.home() / "manim_output"
+                        ]
+                        for search_dir in common_dirs:
+                            if search_dir.exists():
+                                found = find_video_file(search_dir, scene_class)
+                                if found:
+                                    video_path = found
+                                    break
+                    
+                    if not video_path or not video_path.exists():
+                        # List all files in output directory for debugging
+                        debug_info = f"Checked paths:\n"
+                        debug_info += f"- {output_dir / scene_class / quality_name / f'{scene_class}.mp4'}\n"
+                        for qname in possible_quality_names:
+                            debug_info += f"- {output_dir / scene_class / qname / f'{scene_class}.mp4'}\n"
+                        debug_info += f"- {output_dir}\n"
+                        
+                        # List actual files found
+                        if output_dir.exists():
+                            debug_info += f"\nFiles found in output directory:\n"
+                            for item in output_dir.rglob("*"):
+                                if item.is_file():
+                                    debug_info += f"  {item}\n"
+                        
+                        # Also check common Manim locations
+                        for common_dir in [Path.cwd() / "media" / "videos", Path.home() / "manim_output"]:
+                            if common_dir.exists():
+                                debug_info += f"\nFiles found in {common_dir}:\n"
+                                for item in common_dir.rglob("*.mp4"):
+                                    if item.is_file():
+                                        debug_info += f"  {item}\n"
+                        
                         raise RuntimeError(
-                            f"Rendered video not found. Checked:\n"
-                            f"- {output_dir / scene_class / quality_name / f'{scene_class}.mp4'}\n"
-                            f"- {output_dir}\n"
+                            f"Rendered video not found.\n{debug_info}\n"
                             f"Please check the output directory manually."
                         )
-                
+            
+            if not video_path or not video_path.exists():
+                raise RuntimeError(f"Video file not found at: {video_path}")
+            
             return video_path
             
         except FileNotFoundError:

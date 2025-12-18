@@ -92,8 +92,8 @@ class SceneGenerator:
             elif anim_type == "flash":
                 return f"self.play({anim_class}({obj_name}), run_time=0.5)"
             elif anim_type == "grow_from_edge":
-                # GrowFromPoint needs point parameter (using ORIGIN as fallback)
-                return f"self.play({anim_class}({obj_name}, point=ORIGIN), run_time=1.5)"
+                # Using GrowFromCenter (GrowFromPoint may not exist)
+                return f"self.play({anim_class}({obj_name}), run_time=1.5)"
             elif anim_type == "fade_in_from_edge":
                 # Using FadeIn as fallback
                 return f"self.play({anim_class}({obj_name}), run_time=1.5)"
@@ -103,8 +103,16 @@ class SceneGenerator:
             else:
                 return f"self.play({anim_class}({obj_name}), run_time=1.5)"
         
-        # Get background color
+        # Get background color and ensure it's a valid hex string
         background_color = config.get("background_color", DEFAULT_BACKGROUND_COLOR)
+        # Ensure it starts with # if it's a hex color
+        if background_color and not background_color.startswith("#"):
+            # Try to convert QColor name format to hex
+            if len(background_color) == 6 and all(c in "0123456789ABCDEFabcdef" for c in background_color):
+                background_color = "#" + background_color
+            else:
+                # Fallback to default
+                background_color = DEFAULT_BACKGROUND_COLOR
         
         # Generate scene code
         # Note: Resolution is handled by Manim quality flags, not in scene code
@@ -180,6 +188,7 @@ class LogoScreen(Scene):
         # Animate in sequence
 '''
         
+        # Animate upper text if present
         if upper_text:
             upper_anim_code = get_animation_code("upper_text_obj", upper_animation, is_text=True)
             scene_code += f'''        {upper_anim_code}
@@ -187,18 +196,18 @@ class LogoScreen(Scene):
         
 '''
         
-        # Animate logo
+        # Animate logo (always present)
         logo_anim_code = get_animation_code("logo", animation_type, is_text=False)
         scene_code += f'''        # Animate logo
         {logo_anim_code}
-        self.wait(0.5)
-        
 '''
         
+        # Add wait only if there's lower text to animate
         if lower_text:
-            lower_anim_code = get_animation_code("lower_text_obj", lower_animation, is_text=True)
-            scene_code += f'''        # Animate lower text
-        {lower_anim_code}
+            scene_code += f'''        self.wait(0.5)
+        
+        # Animate lower text
+        {get_animation_code("lower_text_obj", lower_animation, is_text=True)}
         
 '''
         
