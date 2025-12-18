@@ -6,7 +6,7 @@ config.background_color = "#00ff00"
 
 class LogoScreen(Scene):
     def construct(self):
-        # Set background color
+        # Set background color (both config and camera for compatibility)
         self.camera.background_color = "#00ff00"
         
         # Load SVG
@@ -40,7 +40,7 @@ class LogoScreen(Scene):
         lower_text_obj.move_to(DOWN * 2.5)
 
         # Animate in sequence
-        self.play(DrawBorderThenFill(upper_text_obj), run_time=1.5)
+        self.play(FadeIn(upper_text_obj), run_time=1.5)
         self.wait(0.5)
         
         # Animate logo
@@ -48,6 +48,6 @@ class LogoScreen(Scene):
         self.wait(0.5)
         
         # Animate lower text
-        self.play(DrawBorderThenFill(lower_text_obj), run_time=1.5)
+        self.play(Write(lower_text_obj), run_time=1.5)
         
         self.wait(1)
